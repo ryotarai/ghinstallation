@@ -106,16 +106,21 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 // Token checks the active token expiration and renews if necessary. Token returns
 // a valid access token. If renewal fails an error is returned.
 func (t *Transport) Token(ctx context.Context) (string, error) {
+	token, _, err := t.TokenWithExpiresAt(ctx)
+	return token, err
+}
+
+func (t *Transport) TokenWithExpiresAt(ctx context.Context) (string, time.Time, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.token == nil || t.token.ExpiresAt.Add(-time.Minute).Before(time.Now()) {
 		// Token is not set or expired/nearly expired, so refresh
 		if err := t.refreshToken(ctx); err != nil {
-			return "", fmt.Errorf("could not refresh installation id %v's token: %s", t.installationID, err)
+			return "", time.Time{}, fmt.Errorf("could not refresh installation id %v's token: %s", t.installationID, err)
 		}
 	}
 
-	return t.token.Token, nil
+	return t.token.Token, t.token.ExpiresAt, nil
 }
 
 // Permissions returns a transport token's GitHub installation permissions.
