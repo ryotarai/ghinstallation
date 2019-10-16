@@ -1,4 +1,4 @@
-module github.com/bradleyfalzon/ghinstallation
+module github.com/ryotarai/ghinstallation
 
 go 1.13
 
